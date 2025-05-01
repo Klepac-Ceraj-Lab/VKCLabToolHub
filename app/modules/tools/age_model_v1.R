@@ -40,7 +40,7 @@ age_model_v1_ui <- function(id) {
                  helpText("We'll send your results here. Your email will not be shared."),
                  # MP3 Profiles upload
                  fileInput(NS(id, "mp3Profiles"), "Upload MP3 Profiles",
-                           accept = c(".tsv", ".csv"), multiple = TRUE),
+                           accept = c(".tsv", ".csv", ".zip"), multiple = FALSE),
                  helpText("Required: One or more MetaPhlAn3 taxonomic profiles."),
                  # Age Metadata upload
                  fileInput(NS(id, "ageMetadata"), "Upload Age Metadata (Optional)",
@@ -126,31 +126,41 @@ age_model_v1_server <- function(id) {
         submitted_at TEXT,
         ip TEXT,
         status TEXT,
-        result_path TEXT
+        uuid TEXT,
+        message TEXT
       );
     ")
 
     runs_data <- reactiveVal({
       df <- dbGetQuery(conn, "SELECT * FROM runs ORDER BY submitted_at DESC")
-      # build a download link column if result_path is present
-      df$Download <- ifelse(
-        !is.na(df$result_path) & nzchar(df$result_path),
-        sprintf(
-          '<a href="%s" class="btn btn-sm btn-primary" download>Download</a>',
-          df$result_path
-        ),
-        ""
+
+      # 1) Status badge: green if completed, red if error
+      df$pretty_status <- ifelse(
+        df$status == "completed",
+        '<span class="badge bg-success">Completed</span>',
+        '<span class="badge bg-danger">Error</span>'
       )
-      print(df)
+
+      # 2) Download button only for completed
+      df$download <- ifelse(
+        df$status == "completed",
+        sprintf(
+          '<a href="http://10.131.0.41:1025/age_model_v1/download/%s" target="_blank" class="btn btn-sm btn-primary" download>Download</a>',
+          df$uuid
+        ),
+        ""   # empty string → no button
+      )
+
+      # (optional) drop the raw status column so you don’t show it twice
+      df$status <- NULL
+
+      df
     })
 
-    output$history_table <- renderDT(
+    output$history_table <- DT::renderDataTable(
       runs_data(),
-      escape = FALSE,
-      rownames = FALSE,
-        options = list(
-          pageLength = 10
-        )
+      escape = FALSE, selection = 'none', server = FALSE,
+      options = list(dom = 't', paging = FALSE, ordering = FALSE)
     )
 
     # Observe the submit button, then print submitted values and run analysis
@@ -181,41 +191,75 @@ age_model_v1_server <- function(id) {
 
       # attach MP3 profiles
       if (!is.null(input$mp3Profiles)) {
-        for (i in seq_len(nrow(input$mp3Profiles))) {
-          path <- input$mp3Profiles$datapath[i]
-          name <- input$mp3Profiles$name[i]
-          body_list[[paste0("mp3Profiles__", i)]] <- upload_file(path, type = mime::guess_type(name))
-        }
+
+        orig_path <- input$mp3Profiles$datapath
+        ext       <- file_ext(orig_path) # e.g. "csv"
+        new_name  <- paste0("mp3_profiles.", ext)
+        dst       <- file.path(tempdir(), new_name)
+
+        print(dst)
+
+        file.copy(orig_path, dst, overwrite = TRUE)
+
+        body_list[["mp3Profiles"]] <- upload_file(
+          dst,
+          type = mime::guess_type(new_name)
+        )
+
       }
       # attach optional age metadata
       if (!is.null(input$ageMetadata)) {
-        body_list[["ageMetadata"]] <- upload_file(input$ageMetadata$datapath,
-                                                  type = mime::guess_type(input$ageMetadata$name))
+
+        orig_path <- input$ageMetadata$datapath
+        ext       <- file_ext(orig_path) # e.g. "csv"
+        new_name  <- paste0("age_metadata.", ext)
+        dst       <- file.path(tempdir(), new_name)
+
+        print(dst)
+
+        file.copy(orig_path, dst, overwrite = TRUE)
+        body_list[["ageMetadata"]] <- upload_file(
+          dst,
+          type = mime::guess_type(new_name)
+        )
+
       }
 
       # 3) send the POST
       resp <- tryCatch(
-        POST("http://127.0.0.1:1025/agemodelv1", body = body_list, encode = "multipart"),
+        POST("http://10.131.0.41:1025/age_model_v1/prediction", body = body_list, encode = "multipart"),
         error = function(e) e
       )
 
-      # 4) parse outcome
+      # Process response received
+      status      <- "error"
+      message_txt <- NULL
+      result_uuid <- NA_character_
+
       if (inherits(resp, "error")) {
-        status      <- "error"
-        message_txt <- resp$message
-        result_path <- NA_character_
-      } else if (status_code(resp) == 200) {
-        parsed      <- content(resp, "parsed", simplifyVector = TRUE)
-        status      <- "completed"
-        message_txt <- parsed$message
-        result_path <- parsed$result_path
+        # network-level failure (timeout, unreachable, etc)
+        message_txt <- conditionMessage(resp)
+
       } else {
-        # non‑200
-        parsed      <- tryCatch(content(resp, "parsed", simplifyVector = TRUE),
-                                error = function(e) list(message = content(resp, "text")))
-        status      <- "error"
-        message_txt <- parsed$message %||% sprintf("HTTP %s", status_code(resp))
-        result_path <- NA_character_
+        # we got an HTTP response
+        code   <- status_code(resp)
+        # try JSON parse, but fall back to raw text
+        parsed <- tryCatch(
+          content(resp, "parsed", simplifyVector = TRUE),
+          error = function(e) list(message = content(resp, "text", encoding="UTF-8"))
+        )
+
+        if (code == 200L) {
+          status      <- "completed"
+          message_txt <- parsed$message %||% "No message field in response"
+          result_uuid <- parsed$uuid    %||% NA_character_
+        } else {
+          status      <- "error"
+          # if the server sent a “message” field in JSON, use that;
+          # otherwise show the HTTP code and raw text
+          message_txt <- parsed$message %||%
+            sprintf("HTTP %s: %s", code, content(resp, "text", encoding="UTF-8"))
+        }
       }
 
       # client IP
@@ -227,9 +271,9 @@ age_model_v1_server <- function(id) {
       DBI::dbExecute(conn, "
         INSERT INTO runs
           (jobId, userName, email, maskName, runBenchmark,
-           allowContribution, submitted_at, ip, status, result_path)
+           allowContribution, submitted_at, ip, status, uuid, message)
         VALUES
-          (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ", params = list(
         input$jobId,
         input$userName,
@@ -240,7 +284,8 @@ age_model_v1_server <- function(id) {
         as.character(Sys.time()),
         ip,
         status,
-        result_path
+        result_uuid,
+        message_txt
       ))
 
       # 6) dismiss modal & notify
