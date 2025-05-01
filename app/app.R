@@ -5,6 +5,8 @@ library(DBI)
 library(RSQLite)
 library(httr)
 library(DT)
+library(tools)
+library(rlang)
 
 # Source your module files
 source("custom_css.R")
