@@ -80,6 +80,11 @@ custom_css <- tags$style(HTML("
     color: #666;
   }
 
+      .spotify-card-link:hover {
+      text-decoration: none;   /* no underline */
+      cursor: pointer;         /* pointer on hover */
+    }
+
         /* Header Banner: background image, centered large text */
       .header-banner {
         background-image: url('/assets/Age-Model.png');
