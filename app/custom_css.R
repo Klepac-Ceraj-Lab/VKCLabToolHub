@@ -3,7 +3,7 @@ custom_css <- tags$style(HTML("
     .sidebar {
       display: flex;
       background-color: #0142A4 !important;
-      height: 100vh;  /* use 100vh if you need full viewport height */
+      min-height: 100vh; /* use 100vh if you need full viewport height */
       flex-direction: column;
       justify-content: space-between;
       padding: 15px;

@@ -23,7 +23,7 @@ router <- router_ui(
 )
 
 ui <- page_sidebar(
-  header = "My bslib App",
+  header = "VKC Lab Tools Hub",
   # Use a dynamic sidebar instead of a static one so we can leverage reactivity:
   sidebar = uiOutput("custom_sidebar"),
   theme = bs_theme(bootswatch = "flatly"),
@@ -86,18 +86,22 @@ server <- function(input, output, session) {
       ),
       # Separator
       div(
-        style = "margin: 100 100 100 100; height: 100%; vertical-align: bottom; width: 0px;"
+        style = "margin: 100 100 100 100; height: 50%; vertical-align: bottom; width: 0px;"
       ),
       # Bottom block: Footer content
       div(
         id = "sidebarFooter",
-        style = "margin: 0; width: 100%; color: white; font-size: 0.9em; text-align: center;",
+        style = "margin: auto; vertical-align: bottom; width: 100%; color: white; font-size: 0.9em; text-align: center;",
         div(
-          img(src = "assets/White-Trans.png", align = "center", width = "50%")
+          img(src = "assets/College-Logo.png", align = "center", width = "50%"),
+          p("© Wellesley College 2025")
         ),
         div(
-          p("Some flavor text")
-        )
+          img(src = "assets/Wellcome-Logo.png", align = "center", width = "50%"),
+          p("Supported by Wellcome Leap 1kD")
+        ),
+        HTML('Made with ❤️ and <a href="https://shiny.rstudio.com/" target="_blank" rel="noopener">Shiny</a>'),
+        style = "text-align:center; font-size:0.8em; color:#fff; padding:1em 0;"
       )
     )
   })
