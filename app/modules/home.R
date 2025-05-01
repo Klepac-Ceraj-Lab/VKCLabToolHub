@@ -7,11 +7,16 @@ home_ui <- function(id) {
     p("Welcome to the Home Page."),
     fluidRow(
       div(class = "gallery",
-        spotify_card(
-          "assets/Age-Model.png",
-          "Age Model V1",
-          "Estimate gut microbiome maturation in infants 2-18 months from MetaPhlAn3 profiles"
-        ),
+          tags$a(
+            href = route_link("age_model_v1"),
+            class = "spotify-card-link",
+            style = "text-decoration: none; color: inherit; display: block;",
+            spotify_card(
+              "assets/Age-Model.png",
+              "Age Model V1",
+              "Estimate gut microbiome maturation in infants 2-18 months from MetaPhlAn3 profiles"
+          )
+          ),
         spotify_card(
           "assets/Hesse-Hub.webp",
           "Hesse Hub",
