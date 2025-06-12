@@ -61,47 +61,51 @@ server <- function(input, output, session) {
   output$custom_sidebar <- renderUI({
     tagList(
       # Top block: logo and navigation buttons
-      div(
-        tagList(
+      div(class = "d-flex flex-column h-100", style = "height: 100vh;",
+        div(
+          tagList(
+            div(
+              style = "margin-bottom: 30px; padding: 20px;",
+              img(src = "assets/White-Trans.png", align = "center", width = "100%")
+            ),
+            div(
+              style = "margin-bottom: 10px;",
+              actionButton("nav_home", tagList(icon("home"), " Home"),
+                           class = paste("custom-nav-btn w-100", if (current_route() == "home") "active" else ""))
+            ),
+            div(
+              style = "margin-bottom: 10px;",
+              actionButton("nav_about", tagList(icon("info-circle"), " About"),
+                           class = paste("custom-nav-btn w-100", if (current_route() == "about") "active" else ""))
+            ),
+            div(
+              style = "margin-bottom: 10px;",
+              actionButton("nav_age_model_v1", "Age Model V1",
+                           class = paste("custom-nav-btn w-100", if (current_route() == "age_model_v1") "active" else ""))
+            )
+          )
+        ),
+        div(style = "margin-top: 500", p(" ")),
+        # Bottom block: Footer content
+        div(
+          id = "sidebarFooter",
+          class = "mt-auto",
+          style = "margin: auto !important;",
           div(
-            style = "margin-bottom: 30px; padding: 20px;",
-            img(src = "assets/White-Trans.png", align = "center", width = "100%")
+            img(src = "assets/College-Logo.png", align = "center", width = "50%"),
+            p("© Wellesley College 2025"),
+            style = "text-align:center; font-size:0.8em; color:#fff;"
           ),
           div(
-            style = "margin-bottom: 10px;",
-            actionButton("nav_home", tagList(icon("home"), " Home"),
-                         class = paste("custom-nav-btn w-100", if (current_route() == "home") "active" else ""))
+            img(src = "assets/Wellcome-Logo.png", align = "center", width = "50%"),
+            p("Supported by Wellcome Leap 1kD"),
+            style = "text-align:center; font-size:0.8em; color:#fff;"
           ),
           div(
-            style = "margin-bottom: 10px;",
-            actionButton("nav_about", tagList(icon("info-circle"), " About"),
-                         class = paste("custom-nav-btn w-100", if (current_route() == "about") "active" else ""))
-          ),
-          div(
-            style = "margin-bottom: 10px;",
-            actionButton("nav_age_model_v1", "Age Model V1",
-                         class = paste("custom-nav-btn w-100", if (current_route() == "age_model_v1") "active" else ""))
+            HTML('Made with ❤️ and <a href="https://shiny.rstudio.com/" target="_blank" rel="noopener">Shiny</a>'),
+            style = "text-align:center; font-size:0.8em; color:#fff;"
           )
         )
-      ),
-      # Separator
-      div(
-        style = "margin: 100 100 100 100; height: 50%; vertical-align: bottom; width: 0px;"
-      ),
-      # Bottom block: Footer content
-      div(
-        id = "sidebarFooter",
-        style = "margin: auto; vertical-align: bottom; width: 100%; color: white; font-size: 0.9em; text-align: center;",
-        div(
-          img(src = "assets/College-Logo.png", align = "center", width = "50%"),
-          p("© Wellesley College 2025")
-        ),
-        div(
-          img(src = "assets/Wellcome-Logo.png", align = "center", width = "50%"),
-          p("Supported by Wellcome Leap 1kD")
-        ),
-        HTML('Made with ❤️ and <a href="https://shiny.rstudio.com/" target="_blank" rel="noopener">Shiny</a>'),
-        style = "text-align:center; font-size:0.8em; color:#fff; padding:1em 0;"
       )
     )
   })
