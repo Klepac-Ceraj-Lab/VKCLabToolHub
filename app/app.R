@@ -5,6 +5,8 @@ library(DBI)
 library(RSQLite)
 library(httr)
 library(DT)
+library(tools)
+library(rlang)
 
 # Source your module files
 source("custom_css.R")
@@ -21,7 +23,7 @@ router <- router_ui(
 )
 
 ui <- page_sidebar(
-  header = "My bslib App",
+  header = "VKC Lab Tools Hub",
   # Use a dynamic sidebar instead of a static one so we can leverage reactivity:
   sidebar = uiOutput("custom_sidebar"),
   theme = bs_theme(bootswatch = "flatly"),
@@ -59,42 +61,50 @@ server <- function(input, output, session) {
   output$custom_sidebar <- renderUI({
     tagList(
       # Top block: logo and navigation buttons
-      div(
-        tagList(
-          div(
-            style = "margin-bottom: 30px; padding: 20px;",
-            img(src = "assets/White-Trans.png", align = "center", width = "100%")
-          ),
-          div(
-            style = "margin-bottom: 10px;",
-            actionButton("nav_home", tagList(icon("home"), " Home"),
-                         class = paste("custom-nav-btn w-100", if (current_route() == "home") "active" else ""))
-          ),
-          div(
-            style = "margin-bottom: 10px;",
-            actionButton("nav_about", tagList(icon("info-circle"), " About"),
-                         class = paste("custom-nav-btn w-100", if (current_route() == "about") "active" else ""))
-          ),
-          div(
-            style = "margin-bottom: 10px;",
-            actionButton("nav_age_model_v1", "Age Model V1",
-                         class = paste("custom-nav-btn w-100", if (current_route() == "age_model_v1") "active" else ""))
+      div(class = "d-flex flex-column h-100", style = "height: 100vh;",
+        div(
+          tagList(
+            div(
+              style = "margin-bottom: 30px; padding: 20px;",
+              img(src = "assets/White-Trans.png", align = "center", width = "100%")
+            ),
+            div(
+              style = "margin-bottom: 10px;",
+              actionButton("nav_home", tagList(icon("home"), " Home"),
+                           class = paste("custom-nav-btn w-100", if (current_route() == "home") "active" else ""))
+            ),
+            div(
+              style = "margin-bottom: 10px;",
+              actionButton("nav_about", tagList(icon("info-circle"), " About"),
+                           class = paste("custom-nav-btn w-100", if (current_route() == "about") "active" else ""))
+            ),
+            div(
+              style = "margin-bottom: 10px;",
+              actionButton("nav_age_model_v1", "Age Model V1",
+                           class = paste("custom-nav-btn w-100", if (current_route() == "age_model_v1") "active" else ""))
+            )
           )
-        )
-      ),
-      # Separator
-      div(
-        style = "margin: 100 100 100 100; height: 100%; vertical-align: bottom; width: 0px;"
-      ),
-      # Bottom block: Footer content
-      div(
-        id = "sidebarFooter",
-        style = "margin: 0; width: 100%; color: white; font-size: 0.9em; text-align: center;",
-        div(
-          img(src = "assets/White-Trans.png", align = "center", width = "50%")
         ),
+        div(style = "margin-top: 500", p(" ")),
+        # Bottom block: Footer content
         div(
-          p("Some flavor text")
+          id = "sidebarFooter",
+          class = "mt-auto",
+          style = "margin: auto !important;",
+          div(
+            img(src = "assets/College-Logo.png", align = "center", width = "50%"),
+            p("© Wellesley College 2025"),
+            style = "text-align:center; font-size:0.8em; color:#fff;"
+          ),
+          div(
+            img(src = "assets/Wellcome-Logo.png", align = "center", width = "50%"),
+            p("Supported by Wellcome Leap 1kD"),
+            style = "text-align:center; font-size:0.8em; color:#fff;"
+          ),
+          div(
+            HTML('Made with ❤️ and <a href="https://shiny.rstudio.com/" target="_blank" rel="noopener">Shiny</a>'),
+            style = "text-align:center; font-size:0.8em; color:#fff;"
+          )
         )
       )
     )

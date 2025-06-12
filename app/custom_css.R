@@ -3,7 +3,7 @@ custom_css <- tags$style(HTML("
     .sidebar {
       display: flex;
       background-color: #0142A4 !important;
-      height: 100vh;  /* use 100vh if you need full viewport height */
+      height: 100vh;
       flex-direction: column;
       justify-content: space-between;
       padding: 15px;
@@ -80,9 +80,14 @@ custom_css <- tags$style(HTML("
     color: #666;
   }
 
+      .spotify-card-link:hover {
+      text-decoration: none;   /* no underline */
+      cursor: pointer;         /* pointer on hover */
+    }
+
         /* Header Banner: background image, centered large text */
       .header-banner {
-        background-image: url('/assets/Age-Model.png');
+        background-image: url('assets/Age-Model.png');
         background-size: cover;
         background-position: center;
         height: 300px;
